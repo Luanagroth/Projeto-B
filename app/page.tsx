@@ -109,6 +109,7 @@ function getTimeTogether() {
 
 export default function Home() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const escapeButtonRef = useRef<HTMLButtonElement | null>(null);
 
   const [step, setStep] = useState<Step>("intro");
   const [attempts, setAttempts] = useState(0);
@@ -174,16 +175,32 @@ export default function Home() {
     if (attempts >= REQUIRED_ESCAPE_ATTEMPTS) return;
 
     const isMobile = window.innerWidth < 768;
+    const buttonWidth = escapeButtonRef.current?.offsetWidth ?? 260;
+    const horizontalPadding = isMobile ? 32 : 96;
+    const safeMobileX = Math.max(
+      0,
+      (window.innerWidth - buttonWidth - horizontalPadding) / 2,
+    );
+    const safeMobileY = 56;
+    const nextAttempt = Math.min(attempts + 1, REQUIRED_ESCAPE_ATTEMPTS);
+    const mobilePositions = [
+      { x: 0.75, y: -0.6 },
+      { x: -0.75, y: 0.65 },
+      { x: 0.45, y: 0.9 },
+      { x: -0.45, y: -0.85 },
+      { x: 0, y: 0.25 },
+    ];
+    const mobilePosition = mobilePositions[nextAttempt - 1];
 
-    setAttempts((prev) => Math.min(prev + 1, REQUIRED_ESCAPE_ATTEMPTS));
+    setAttempts(nextAttempt);
 
     setButtonPosition({
       x: isMobile
-        ? Math.random() * 220 - 110
+        ? mobilePosition.x * safeMobileX
         : Math.random() * 900 - 450,
 
       y: isMobile
-        ? Math.random() * 180 - 90
+        ? mobilePosition.y * safeMobileY
         : Math.random() * 500 - 250,
     });
   }
@@ -284,11 +301,14 @@ export default function Home() {
             <p className="text-white/70">{introMessage}</p>
 
             <motion.button
+              ref={escapeButtonRef}
               animate={buttonPosition}
               transition={{ type: "spring", stiffness: 300, damping: 16 }}
-              onMouseEnter={moveButton}
+              onMouseEnter={() => {
+                if (window.innerWidth >= 768) moveButton();
+              }}
               onClick={handleIntroClick}
-              className="rounded-full bg-pink-500 px-8 py-4 font-bold shadow-[0_0_35px_#ec4899] hover:bg-pink-400"
+              className="max-w-[calc(100vw-2rem)] touch-manipulation rounded-full bg-pink-500 px-6 py-4 font-bold shadow-[0_0_35px_#ec4899] hover:bg-pink-400 sm:px-8"
             >
               {attempts < REQUIRED_ESCAPE_ATTEMPTS
                 ? "Quero continuar ❤️"
