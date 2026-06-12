@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 
 const CORRECT_DATE = "16/11/2025";
 const START_DATE = new Date("2025-11-16T00:00:00");
+const REQUIRED_ESCAPE_ATTEMPTS = 5;
 
 type Step =
   | "intro"
@@ -170,17 +171,30 @@ export default function Home() {
   }
 
   function moveButton() {
-    if (attempts >= 5) return;
+    if (attempts >= REQUIRED_ESCAPE_ATTEMPTS) return;
 
-    setAttempts((prev) => prev + 1);
+    const isMobile = window.innerWidth < 768;
+
+    setAttempts((prev) => Math.min(prev + 1, REQUIRED_ESCAPE_ATTEMPTS));
+
     setButtonPosition({
-      x: Math.random() * 900 - 450,
-      y: Math.random() * 500 - 250,
+      x: isMobile
+        ? Math.random() * 220 - 110
+        : Math.random() * 900 - 450,
+
+      y: isMobile
+        ? Math.random() * 180 - 90
+        : Math.random() * 500 - 250,
     });
   }
 
   function handleIntroClick() {
-    if (attempts >= 5) setStep("password");
+    if (attempts >= REQUIRED_ESCAPE_ATTEMPTS) {
+      setStep("password");
+      return;
+    }
+
+    moveButton();
   }
 
   function formatDate(value: string) {
@@ -227,17 +241,17 @@ export default function Home() {
       ? "Mas antes… precisa provar que quer mesmo continuar 😏"
       : attempts === 1
         ? "Foi quase 😂"
-        : attempts === 2
-          ? "Última chance... 👀"
+        : attempts < REQUIRED_ESCAPE_ATTEMPTS
+          ? "Ainda não... ele precisa fugir 5 vezes 😂"
           : "Ok, você venceu. Agora precisa acertar a senha ❤️";
 
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#09070f] px-6 py-10 text-white">
+    <main className="relative flex min-h-screen items-center justify-center overflow-x-hidden overflow-y-auto bg-[#09070f] px-4 py-20 text-white md:px-6 md:py-10">
       <audio ref={audioRef} src="/audio/mirrors.mp3" loop />
 
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,#7c2d5c55,transparent_35%),radial-gradient(circle_at_bottom,#1d4ed855,transparent_35%)]" />
 
-      <div className="absolute left-6 top-6 z-20">
+      <div className="fixed left-3 top-3 z-20 md:left-6 md:top-6">
         {!musicStarted ? (
           <button
             onClick={startMusic}
@@ -263,7 +277,7 @@ export default function Home() {
               Projeto B
             </p>
 
-            <h1 className="text-4xl font-bold md:text-6xl">
+            <h1 className="text-3xl font-bold md:text-6xl">
               Bruno, você foi convidado para desbloquear uma história.
             </h1>
 
@@ -276,12 +290,14 @@ export default function Home() {
               onClick={handleIntroClick}
               className="rounded-full bg-pink-500 px-8 py-4 font-bold shadow-[0_0_35px_#ec4899] hover:bg-pink-400"
             >
-              {attempts < 3
+              {attempts < REQUIRED_ESCAPE_ATTEMPTS
                 ? "Quero continuar ❤️"
                 : "Precisa acertar a senha 🔐"}
             </motion.button>
 
-            <p className="text-xs text-white/40">Tentativas: {attempts}/3</p>
+            <p className="text-xs text-white/40">
+              Fugidas: {attempts}/{REQUIRED_ESCAPE_ATTEMPTS}
+            </p>
           </motion.div>
         )}
 
@@ -361,11 +377,11 @@ export default function Home() {
               Nosso tempo
             </p>
 
-            <h2 className="text-4xl font-bold md:text-5xl">
+            <h2 className="text-3xl font-bold md:text-6xl">
               Há exatamente este tempo construindo nossa história ❤️
             </h2>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {[
                 [timeTogether.days, "dias"],
                 [timeTogether.hours, "horas"],
@@ -486,7 +502,7 @@ export default function Home() {
                 value={reportAnswer}
                 onChange={(e) => setReportAnswer(e.target.value)}
                 placeholder="Digite sua opinião..."
-                className="min-h-120px w-full rounded-2xl border border-white/10 bg-black/30 p-4 outline-none focus:border-pink-400"
+                className="min-h-[120px] w-full rounded-2xl border border-white/10 bg-black/30 p-4 outline-none focus:border-pink-400"
               />
 
               <button
@@ -742,7 +758,7 @@ export default function Home() {
               muted
               playsInline
               onEnded={() => setStep("ending")}
-              className="mx-auto max-h-[70vh] w-full rounded-3xl border border-white/10 shadow-2xl"
+              className="mx-auto w-full max-w-3xl rounded-3xl border border-white/10 shadow-2xl"
             />
 
             <p className="text-white/70">
